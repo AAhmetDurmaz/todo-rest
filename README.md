@@ -11,6 +11,14 @@ git clone https://github.com/AAhmetDurmaz/todo-rest.git
 pip install -r requirements.txt
 ```
 
+### Change todo/settings.py
+```settings.py``` contains the default settings. These are normal and super users that are automatically added to the database. It is recommended to remove them.
+Automatically created users:
+| Username | e-Mail | Password | User Type |
+| :------ | :------ | :------- | :-------- |
+| ahmet | ahmet@ahmet.com | ahmet1413 | Normal User |
+| admin | admin@admin.com | ahmet1413 | Super User |
+
 ### Generate database
 ```bash
 python manage.py makemigrations
@@ -19,7 +27,7 @@ python manage.py migrate
 
 ### Run the server
 `python manage.py runserver`
-the application will be running on port 8000 http://127.0.0.1:8000/
+the application will be running on port 8000 http://localhost:8000/
 ## API Documentation
 #### Authorization
 | Header | Description     |
