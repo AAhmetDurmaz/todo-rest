@@ -63,6 +63,14 @@ the application will be running on port 8000 http://localhost:8000/
 ```http
   GET /list
 ```
+| Query Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `name` | `string` | **Optional**. Name of the list. |
+| `orderby` | `string` | **Optional**. "asc" or "desc" to sort by name. |
+| `created_at_start` | `date` | **Optional**. created_at range start. |
+| `created_at_end` | `date` | **Optional**. created_at range end. |
+
+
 
 #### Create TO-DO list - Authorization required
 ```http
