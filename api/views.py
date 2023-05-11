@@ -1,5 +1,7 @@
-from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework import status, permissions
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import Http404
@@ -11,6 +13,8 @@ from django.utils.dateparse import parse_date
 
 
 class TaskListView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
     def get(self, request):
         try:
             conditions = Q(deleted_at=None)
@@ -19,6 +23,8 @@ class TaskListView(APIView):
             created_at_start = self.request.query_params.get('created_at_start')
             created_at_end = self.request.query_params.get('created_at_end')
 
+            if not self.request.user.is_superuser:
+                conditions &= Q(creator=self.request.user.id)
             if name:
                 conditions &= Q(name__icontains=name)
             if created_at_start and created_at_end:
@@ -44,9 +50,13 @@ class TaskListView(APIView):
 
 
 class TaskListDetailsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
     def get(self, request, uuid):
         try:
             conditions = Q(id=uuid, deleted_at=None)
+            if not self.request.user.is_superuser:
+                conditions &= Q(creator=self.request.user.id)
             task_lists = TaskList.objects.get(conditions)
         except TaskList.DoesNotExist:
             raise Http404("Not found.")
@@ -56,6 +66,8 @@ class TaskListDetailsView(APIView):
     def put(self, request, uuid):
         try:
             conditions = Q(id=uuid, deleted_at=None)
+            if not self.request.user.is_superuser:
+                conditions &= Q(creator=self.request.user.id)
             task = TaskList.objects.get(conditions)
         except TaskList.DoesNotExist:
             raise Http404("Not found.")
@@ -69,11 +81,15 @@ class TaskListDetailsView(APIView):
     def delete(self, request, uuid):
         try:
             conditions = Q(id=uuid, deleted_at=None)
+            if not self.request.user.is_superuser:
+                conditions &= Q(creator=self.request.user.id)
             task_list = TaskList.objects.get(conditions)
         except TaskList.DoesNotExist:
             raise Http404("Not found.")
         task_list.soft_delete()
         conditions = Q(list_id=uuid, deleted_at=None)
+        if not self.request.user.is_superuser:
+            conditions &= Q(creator=self.request.user.id)
         tasks = Task.objects.filter(conditions)
         tasks.update(deleted_at=timezone.now())
         return Response({
@@ -83,6 +99,8 @@ class TaskListDetailsView(APIView):
 
 
 class TaskView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request):
         serializer = TaskSerializer(data=request.data)
         try:
@@ -99,9 +117,13 @@ class TaskView(APIView):
 
 
 class TaskDetailsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
     def get(self, request, uuid):
         try:
             conditions = Q(id=uuid, deleted_at=None)
+            if not self.request.user.is_superuser:
+                conditions &= Q(creator=self.request.user.id)
             task = Task.objects.get(conditions)
         except Task.DoesNotExist:
             raise Http404("Not found.")
@@ -111,6 +133,8 @@ class TaskDetailsView(APIView):
     def put(self, request, uuid):
         try:
             conditions = Q(id=uuid, deleted_at=None)
+            if not self.request.user.is_superuser:
+                conditions &= Q(creator=self.request.user.id)
             task = Task.objects.get(conditions)
         except Task.DoesNotExist:
             raise Http404("Not found.")
@@ -124,6 +148,8 @@ class TaskDetailsView(APIView):
     def delete(self, request, uuid):
         try:
             conditions = Q(id=uuid, deleted_at=None)
+            if not self.request.user.is_superuser:
+                conditions &= Q(creator=self.request.user.id)
             task = Task.objects.get(conditions)
         except Task.DoesNotExist:
             raise Http404("Not found.")
@@ -135,6 +161,8 @@ class TaskDetailsView(APIView):
 
 
 @api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
 def apiOverview(request):
     url = request.build_absolute_uri()
     api_urls = {
